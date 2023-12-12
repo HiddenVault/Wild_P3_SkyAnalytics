@@ -40,4 +40,3 @@ else:
 # Fermeture du curseur et connexion pymysql
 cursor.close()
 connection.close()
-
