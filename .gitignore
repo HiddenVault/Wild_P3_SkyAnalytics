@@ -8,3 +8,6 @@ exported_scripts.txt
 /src/__pycache__/
 /src/env/
 /docs/dev/.$P3_SkyAnalytics.drawio.bkp
+/__pycache__/
+/incoming/
+/preprocessing/
