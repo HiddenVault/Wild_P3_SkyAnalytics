@@ -22,6 +22,12 @@ from datetime import datetime, timedelta  # Pour manipuler les dates
 def file_download(start_date, path, file_name, storage_folder):
     print()
     print(f"💾 Téléchargement des fichiers {file_name}.")
+
+    # Vérification de l'existance du dossier
+    if not os.path.exists(storage_folder):
+        # Si le dossier est absent, on le crée
+        os.makedirs(storage_folder)
+
     # Conversion de la date de début
     # La date est contenue dans le nom du fichier au format 'AAAA-MM-JJ') 
     start_date = datetime.strptime(start_date, '%Y-%m-%d')
@@ -86,6 +92,7 @@ from datetime import datetime, timedelta  # Pour manipuler les dates
 def concatenate_csv(start_date, outgoing_folder, file_name, storage_folder, outgoing_file):
     print()
     print(f"💾 Concaténation des fichiers {file_name}.")
+
     # Conversion de la date de début
     # La date est contenue dans le nom du fichier au format 'AAAA-MM-JJ') 
     start_date = datetime.strptime(start_date, '%Y-%m-%d')
@@ -128,6 +135,12 @@ def concatenate_csv(start_date, outgoing_folder, file_name, storage_folder, outg
     # Exportation du dataFrame final dans un fichier CSV
     file_name_sortie = f'{outgoing_file}_FULL.csv'
     outgoing_folder_sortie = os.path.join(outgoing_folder, file_name_sortie)
+
+    # Vérification de l'existance du dossier
+    if not os.path.exists(outgoing_folder):
+        # Si le dossier est absent, on le crée
+        os.makedirs(outgoing_folder)
+
     final_dataframe.to_csv(outgoing_folder_sortie, index=False)
     print(f"DataFrame final exporté dans {file_name_sortie}.")
 
