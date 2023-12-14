@@ -22,17 +22,20 @@ Exemple : create_column_id(df, prefix= 'degradations', origin_column = 'measure_
 
 def create_column_id(df, prefix, origin_column, target_column): 
     print()
-    print(f"💾 Traitement du dataframe en cours")
+    print(f"\n💾 Traitement du dataframe en cours")
     print(df.head(5))
     # Conversion de la colonne en format datetime
     df[origin_column] = pd.to_datetime(df[origin_column], errors='coerce')
+    print(f"\n✅ Conversion de la colonne en format Date/Time", end='')
 
-    # Extraction de la datee au format YYYY-MM-DD et concaténation avec le préfixe
+    # Extraction de la date au format YYYY-MM-DD et concaténation avec le préfixe
     df[target_column] = prefix + '_' + df[origin_column].dt.strftime('%Y-%m-%d')
+    print(f"\n✅ Concaténation de la date et du préfixe", end='')
 
     # Déplacement de target_column en première position
     target_column_series = df.pop(target_column)
     df.insert(0, target_column, target_column_series)
+    print(f"\n✅ Réorganisaton des colonnes")
 
     print(f"\n💾 Traitement du dataframe terminé")
     print(df.head(5))
@@ -58,7 +61,7 @@ def split_column_json(df, column_name):
     if column_name not in df.columns:
         print(f"❌ La colonne '{column_name}' n'existe pas.")
         return df
-    print(f"💾 Traitement du dataframe en cours")
+    print(f"\n💾 Traitement du dataframe en cours")
     print(df.head(5))
 
     def extract_sensor_data(sensor_data):
@@ -77,14 +80,17 @@ def split_column_json(df, column_name):
             # Autant de none que de colonnes
             return None, None, None
 
+    print(f"\n✅ Traitement des colonnes de températures, pressions et vibrations", end='')
+
     # Appliquer la fonction extract_sensor_data à la colonne sensor_data
     df[[column_name]] = df[[column_name]].applymap(extract_sensor_data)
 
     # Division de sensor_data en colonnes distinctes
     df[['temp_C', 'pressure_hPa', 'vibrations_ms2']] = pd.DataFrame(df[column_name].tolist(), index=df.index)
+    print(f"\n✅ Division de sensor_data en colonnes distinctes", end='')
 
     # Suppression de la colonne
-    print(f"\nℹ️ Suppression de la colonne sensor_data")
+    print(f"\n✅ Suppression de la colonne sensor_data")
     df = df.drop([column_name], axis=1)
 
     print(f"\n💾 Traitement du dataframe terminé")
@@ -92,17 +98,49 @@ def split_column_json(df, column_name):
 
     return df
 
+'''
+Explications :
+La fonction create_column prend en entrée :
+    - df : Nom du dataframe utilisé
+    - created_column : Nom de la colonne à créer
+    - position_column : Position de la colonne
 
+Etapes du script :
+    - Création de la nouvelle colonne
+    - Placement de la colonne 
 
+Exemple : create_column(df, created_column= 'img', position_column = 2, default_value = 'none.png')
+'''
 
+def create_column(df, created_column, position_column, default_value):
+    print(f"\n💾 Traitement du dataframe en cours")
+    print(df.head(5))
 
+    # Vérification de la validité de la position
+    if position_column < 0 or position_column > len(df.columns):
+        raise ValueError("❌ Position de colonne invalide.")
+    
+    # Création d'une nouvelle colonne
+    new_column = pd.Series()
 
+    # On va utiliser 'pop' pour manipuler la nouvelle colonne
+    if default_value is not None:
+        # La nouvelle colonne créée aura une valeur par défaut
+        df[created_column] = default_value
+        print(f"\n✅ Assignation de la valeur par défaut ({default_value})", end='')
+    else:
+        # Sinon ce sera une valeur NaN
+        print(f"\n✅ Assignation de la valeur NaN", end='')
+        df[created_column] = pd.Series()
 
+    # Réorganisation des colonnes
+    columns = list(df.columns)
+    columns.pop()
+    columns.insert(position_column, created_column)
+    df = df[columns]
+    print(f"\n✅ Réorganisaton des colonnes")
 
+    print(f"\n💾 Traitement du dataframe terminé")
+    print(df.head(5))
 
-
-
-
-
-
-
+    return df
