@@ -11,3 +11,4 @@ exported_scripts.txt
 /__pycache__/
 /incoming/
 /preprocessing/
+/src/test/

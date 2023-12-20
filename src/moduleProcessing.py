@@ -144,7 +144,7 @@ def create_column(df, created_column, position_column, default_value):
 
 '''
 Explications :
-La fonction create_column prend en entrée :
+La fonction rename_column prend en entrée :
     - df : Nom du dataframe utilisé
     - original_column : Nom de la colonne à renommer.
     - renamed_column : Nouveau nom
@@ -301,5 +301,30 @@ def fillna_column(df, original_column, type_NaN='NaN'):
     
     print(f"\n🛬 Remplissage terminé")
     # print(df.head(5))
+
+    return df
+
+'''
+Explications :
+La fonction convert_date prend en entrée :
+    - df : Nom du dataframe utilisé
+    - original_column : Nom de la colonne à traiter
+
+Etapes du script :
+    - Remplacement des valeurs d'une colonne DateTime en Date  
+
+Exemple : convert_date(df, original_column = 'measure_day')
+'''
+def convert_date(df, original_column):
+    print(f"\n🛫 Conversion de la colonne '{original_column}' en date", end='')
+
+    # Vérification de l'existence de la colonne
+    if original_column not in df.columns:
+        raise ValueError(f"❌ La colonne '{original_column}' n'existe pas.")
+
+    # Conversion de datetime en date
+    df[original_column] = df[original_column].dt.date
+    print(f"\n✅ La colonne '{original_column}' a été convertie en date", end='')
+    print(f"\n🛬 Conversion terminée")
 
     return df
