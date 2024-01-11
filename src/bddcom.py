@@ -23,5 +23,7 @@ scripts = ['init.sql', 'aeronefs.sql', 'composants.sql']
 # Exécution des scripts SQL
 create_tables(connection, sql_folder, scripts, mysql_path, db_host, db_user, db_password, db_name)
 
+# Récupération et traitement des .csv
+
 # Fermeture de la connexion
 close_db_connection(connection)
