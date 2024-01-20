@@ -1,3 +1,4 @@
+import warnings
 import pandas as pd
 import mysql.connector
 import moduleProcessing
@@ -6,6 +7,10 @@ from dotenv import load_dotenv
 import os # Pour la gestion des fichiers et des répertoires
 import requests # Pour effectuer des requêtes HTTP
 from datetime import datetime, timedelta # Pour manipuler les dates
+import json
+import ast
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 '''
 Explications :
@@ -135,17 +140,18 @@ def process_and_insert_data(cursor, file_path, connection):
 
         # Traitement des données du fichier logs_vols
         df = moduleProcessing.create_column_id(df, 'logs_vols', 'jour_vol', 'id')
-        df = moduleProcessing.split_column_json(df, column_name='sensor_data')
+        df = moduleProcessing.split_column_json(df, column_name='sensor_data',column_copy='copy')
         df = moduleProcessing.rename_column(df, original_column='aero_linked', renamed_column='ref_aero')
         df = moduleProcessing.change_column_type(df, original_column='jour_vol', new_type='datetime64[ns]')
         df = moduleProcessing.convert_date(df, original_column='jour_vol')
         
         # Conversion des types de données pour certaines colonnes.
         df['time_en_air'] = df['time_en_air'].astype(float)
+        df['temp_C'] = df['temp_C'].astype(float)
+        df['pressure_hPa'] = df['pressure_hPa'].astype(float)
         df['vibrations_ms2'] = df['vibrations_ms2'].astype(float)
         df['etat_voyant'] = df['etat_voyant'].astype(int)
-        df['temp_C'] = df['temp_C'].astype(int)
-        df['pressure_hPa'] = df['pressure_hPa'].astype(int)
+        df = df.where(pd.notna(df), None)
 
         # Mise à jour de l'état d'intégration du fichier dans la table 'files'.
         update_file_query = f"UPDATE {table_name} SET integre = 1 WHERE id = %s AND integre = 0"
@@ -153,7 +159,7 @@ def process_and_insert_data(cursor, file_path, connection):
 
         # Insertion des données traitées dans la table 'logs_vols'.
         table_name = "logs_vols"
-        insert_query = f"INSERT INTO {table_name} (id, ref_vol, ref_aero, jour_vol, time_en_air, etat_voyant, temp_C, pressure_hPa, vibrations_ms2) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        insert_query = f"INSERT INTO {table_name} (id, ref_vol, ref_aero, jour_vol, time_en_air, sensor_data, etat_voyant, temp_C, pressure_hPa, vibrations_ms2) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         data_to_insert = df.values.tolist()
         cursor.executemany(insert_query, data_to_insert)
 
@@ -170,25 +176,30 @@ def process_and_insert_data(cursor, file_path, connection):
         cursor.executemany(insert_file_query, data_to_insert_file)
 
         # Traitement des données spécifiques aux fichiers de dégradations.
+        #df['need_replacement'] = df['need_replacement'].replace({False: 0, True: 1}, inplace=True)
+        df['id'] = file_name
+        target_column_series = df.pop('id')
+        df.insert(0, "id", target_column_series)
+        #df = moduleProcessing.create_column_id(df, prefix='degradations', original_column='measure_day', target_column='id')
         df = moduleProcessing.drop_duplicates(df, original_column='compo_concerned', inplace=True)
-        df = moduleProcessing.create_column_id(df, prefix='degradations', original_column='measure_day', target_column='id')
         df = moduleProcessing.rename_column(df, original_column='linked_aero', renamed_column='ref_aero')
-        df = moduleProcessing.rename_column(df, original_column='usure_cumulée', renamed_column='usure_cumulee')
         df = moduleProcessing.change_column_type(df, original_column='measure_day', new_type='datetime64[ns]')
         df = moduleProcessing.convert_date(df, original_column='measure_day')
-        df = moduleProcessing.rounded_column(df, original_column='usure_cumulee', rounded_value='sup')
+        df = moduleProcessing.rounded_column(df, original_column='usure_nouvelle', rounded_value='sup')
 
         # Conversion des types de données pour certaines colonnes.
-        df['usure_cumulee'] = df['usure_cumulee'].astype(float)
+        df['usure_nouvelle'] = df['usure_nouvelle'].astype(float)
+        df = df.where(pd.notna(df), None)
 
         # Mise à jour de l'état d'intégration du fichier dans la table 'files'.
         update_file_query = f"UPDATE {table_name} SET integre = 1 WHERE id = %s AND integre = 0"
         cursor.execute(update_file_query, (file_name,))
 
-        # Insertion des données traitées dans la table 'logs_vols'.
+        # Insertion des données traitées dans la table 'degradations'.
         table_name = "degradations"
-        insert_query = f"INSERT INTO {table_name} (id, ref_deg, ref_aero, compo_concerned,  usure_cumulee, measure_day, need_replacement) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        data_to_insert = df.values.tolist()
+        insert_query = f"INSERT INTO {table_name} (id, ref_deg, ref_aero, compo_concerned, usure_nouvelle, measure_day, need_replacement) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        data_to_insert = df.values.tolist()     
+
         cursor.executemany(insert_query, data_to_insert)
 
     # Traitement des fichiers 'aeronefs'.
@@ -280,8 +291,8 @@ def process_and_insert_data(cursor, file_path, connection):
                 cursor.execute(f"UPDATE {table_name} SET {update_query} WHERE ref_compo = %s", values + [ref_compo])
                 print(f"Mise à jour du composant existant = {ref_compo}")
             else:
-                # Insértion du nouvel enregistrement
-                insert_query = f"INSERT INTO {table_name} (ref_compo, ref_aero, descr, lifespan, taux_usure_actuel, cout_composant) VALUES (%s, %s, %s, %s, %s, %s)"
+                # Insertion du nouvel enregistrement
+                insert_query = f"INSERT INTO {table_name} (ref_compo, categorie, ref_aero, descr, lifespan, taux_usure_actuel, cout) VALUES (%s, %s, %s, %s, %s, %s, %s)"
                 values = [row[col] for col in df.columns]
                 cursor.execute(insert_query, values)
                 print(f"Insertion du nouveau composant = {ref_compo}")

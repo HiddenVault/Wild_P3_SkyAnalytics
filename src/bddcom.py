@@ -1,3 +1,4 @@
+import warnings
 import os
 from moduleConnection import load_environment, get_mysql_path, get_db_connection, close_db_connection
 from moduleSQL import create_tables
@@ -5,6 +6,8 @@ from modulePreprocessing import file_download_batch
 import schedule
 import concurrent.futures
 import time
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # Chemin relatif vers le fichier .env depuis le dossier src
 env_path = os.path.join(os.path.dirname(__file__), 'env', 'adm.env')
@@ -34,29 +37,29 @@ close_db_connection(connection)
 def schedule_tasks_test():
     # Récupération et traitement des .csv
     # Téléchargement des fichiers logs_vols_AAAA-MM-JJ.csv
-    schedule.every(30).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(5).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers degradations_AAAA-MM-JJ.csv
-    schedule.every(30).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(1).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers aeronefs_AAAA-MM-JJ.csv
-    schedule.every(15).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'aeronefs_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(5).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'aeronefs_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers composants_AAAA-MM-JJ.csv
-    schedule.every(45).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'composants_AAAA-MM-JJ.csv', storage_folder='data/incoming')
+    schedule.every(10).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'http://hiddenvault.fr/P3_SkyAnalytics/docs/', file_name = 'composants_AAAA-MM-JJ.csv', storage_folder='data/incoming')
 
 def schedule_tasks():
     # Récupération et traitement des .csv
     # Téléchargement des fichiers logs_vols_AAAA-MM-JJ.csv
-    schedule.every(30).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'https://sc-e.fr/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(60).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers degradations_AAAA-MM-JJ.csv
-    schedule.every(30).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'https://sc-e.fr/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(10).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers aeronefs_AAAA-MM-JJ.csv
-    schedule.every(15).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'https://sc-e.fr/docs/', file_name = 'aeronefs_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(60).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'aeronefs_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers composants_AAAA-MM-JJ.csv
-    schedule.every(45).seconds.do(file_download_batch, start_date = '2023-11-01', path = 'https://sc-e.fr/docs/', file_name = 'composants_AAAA-MM-JJ.csv', storage_folder='data/incoming')
+    schedule.every(60).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'composants_AAAA-MM-JJ.csv', storage_folder='data/incoming')
 
 
 # Appel de la fonction pour exécuter les tâches planifiées
-schedule_tasks_test()
-#schedule_tasks()
+#schedule_tasks_test()
+schedule_tasks()
 
 
 # Création un ThreadPoolExecutor (pool de threads) pour exécuter les tâches planifiées en parallèle

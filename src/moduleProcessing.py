@@ -45,14 +45,20 @@ Explications :
 La fonction split_column_json prend en entrée :
     - df : Nom du dataframe utilisé
     - column_name : Nom de la colonne à diviser
+    - column_copy : Nom de la colonne temporaire ou sont effectuées les opérations
 
 Etapes du script :
     - Vérification de l'existence de la colonne
-    - Division de la colonne "sensor_data" en colonnes distinctes avec pd.json_normalize().
+    - Duplication de la colonne 'sensor_data'
+    - Division de la colonne dupliquée en colonnes distinctes avec pd.json_normalize().
 
-Exemple : split_column_json(df, column_name = 'sensor_data')
+Exemple : (df, column_name='sensor_data',column_copy='copy')
 '''
-def split_column_json(df, column_name):
+import warnings
+import json
+import pandas as pd
+
+def split_column_json(df, column_name, column_copy):
     warnings.simplefilter('ignore')
     
     # Vérification de l'existence de la colonne
@@ -60,7 +66,9 @@ def split_column_json(df, column_name):
         print(f"\n❌ La colonne '{column_name}' n'existe pas.", end='')
         return df
     print(f"\n🛫 Division de la colonne {column_name} en cours", end='')
-    # print(df.head(5))
+    
+    # Création d'une copie de la colonne spécifiée
+    df[column_copy] = df[column_name].copy()
 
     def extract_sensor_data(sensor_data):
         try:
@@ -69,32 +77,27 @@ def split_column_json(df, column_name):
             # 1. Extraction des températures, pressions et vibrations du dictionnaire JSON
             # 2. Suppression des unités '°C', 'hPa', 'm/s²'
             # 3. Conversion en nombre
-            temp = int(data.get('temp').replace('°C', ''))
-            pressure = int(data.get('pressure').replace('hPa', ''))
+            temp = float(data.get('temp').replace('°C', ''))
+            pressure = float(data.get('pressure').replace('hPa', ''))
             vibrations = float(data.get('vibrations').replace('m/s²', ''))
             return temp, pressure, vibrations
         except Exception as e:
             print(f"\n❌ Erreur lors de l'extraction des données : {e}", end='')
-            # Autant de none que de colonnes
+            # Autant de None que de colonnes
             return None, None, None
 
     print(f"\n✅ Traitement des colonnes de températures, pressions et vibrations", end='')
 
-    # Appliquer la fonction extract_sensor_data à la colonne sensor_data
-    df[[column_name]] = df[[column_name]].applymap(extract_sensor_data)
-
-    # Division de sensor_data en colonnes distinctes
-    df[['temp_C', 'pressure_hPa', 'vibrations_ms2']] = pd.DataFrame(df[column_name].tolist(), index=df.index)
-    print(f"\n✅ Division de sensor_data en colonnes distinctes", end='')
-
-    # Suppression de la colonne
-    print(f"\n✅ Suppression de la colonne sensor_data", end='')
-    df = df.drop([column_name], axis=1)
+    # Application de la fonction extract_sensor_data à la colonne copiée
+    df[['temp_C', 'pressure_hPa', 'vibrations_ms2']] = df[column_copy].apply(extract_sensor_data).apply(pd.Series)
+    
+    # Suppression de la colonne sensor_data_copy
+    df = df.drop([column_copy], axis=1)
 
     print(f"\n🛬 Division terminée")
-    # print(df.head(5))
-
+    
     return df
+
 
 '''
 Explications :
@@ -256,18 +259,26 @@ Etapes du script :
 Exemple : change_column_type(df, original_column = 'compo_concerned', new_type = 'datetime64')
 '''
 def change_column_type(df, original_column, new_type):
-    print(f"\n🛫 Changement du type de la colonne en cours", end='')
-    # print(df.head(5))
-    
+    print(f"\n🛫 Changement du type de la colonne {original_column} en cours", end='')
+
     # Vérification de l'existence de la colonne
     if original_column not in df.columns:
         raise ValueError(f"❌ La colonne '{original_column}' n'existe pas.")
 
     # Changement du type de la colonne
-    df[original_column] = df[original_column].astype(new_type)
+    if new_type == 'datetime64[ns]':
+        # Convertion de la colonne en datetime
+        df[original_column] = pd.to_datetime(df[original_column], errors='coerce')
+
+        # Réinitialisation de l'heure à "00:00:00" si elle est de type datetime
+        if df[original_column].dtype == 'datetime64[ns]':
+            df[original_column] = df[original_column].dt.normalize()
+    else:
+        # Changement du type de la colonne pour les autres types
+        df[original_column] = df[original_column].astype(new_type)
+
     print(f"\n✅ Changement du type {df[original_column].dtype} de la colonne {original_column} par {new_type}", end='')
     print(f"\n🛬 Changement du type terminé")
-    # print(df.head(5)) 
 
     return df
 
