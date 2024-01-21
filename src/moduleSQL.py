@@ -2,6 +2,7 @@ import os
 import subprocess
 import mysql.connector
 from mysql.connector import Error
+import pandas as pd
 
 '''
 Explications :
@@ -102,3 +103,13 @@ def delete_records(connection, table, prefix, *dates):
         # Affiche d'un message en cas d'erreur
         print(f"Erreur MySQL : {err}")
 
+
+def export_data(connection, table_name):
+    query = f"SELECT * FROM {table_name}"
+    data = pd.read_sql(query, connection)
+    return data
+
+def export_data_date(connection, table_name, date):
+    query = f"SELECT * FROM {table_name} WHERE id like '%{date}'"
+    data = pd.read_sql(query, connection)
+    return data

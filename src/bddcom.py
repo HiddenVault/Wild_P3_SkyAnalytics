@@ -6,6 +6,7 @@ from modulePreprocessing import file_download_batch
 import schedule
 import concurrent.futures
 import time
+import datetime
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -33,6 +34,11 @@ create_tables(connection, sql_folder, scripts, mysql_path, db_host, db_user, db_
 # Fermeture de la connexion
 close_db_connection(connection)
 
+# Nombre de journée à récupérer
+today_date = datetime.date.today()
+new_date = today_date - datetime.timedelta(days=7)
+start_date = new_date.strftime('%Y-%m-%d')
+
 # Planificateurs de tâches
 def schedule_tasks_test():
     # Récupération et traitement des .csv
@@ -48,13 +54,13 @@ def schedule_tasks_test():
 def schedule_tasks():
     # Récupération et traitement des .csv
     # Téléchargement des fichiers logs_vols_AAAA-MM-JJ.csv
-    schedule.every(60).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(60).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers degradations_AAAA-MM-JJ.csv
-    schedule.every(10).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(10).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers aeronefs_AAAA-MM-JJ.csv
-    schedule.every(60).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'aeronefs_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(60).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'aeronefs_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers composants_AAAA-MM-JJ.csv
-    schedule.every(60).seconds.do(file_download_batch, start_date = '2024-01-11', path = 'https://sc-e.fr/docs/', file_name = 'composants_AAAA-MM-JJ.csv', storage_folder='data/incoming')
+    schedule.every(60).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'composants_AAAA-MM-JJ.csv', storage_folder='data/incoming')
 
 
 # Appel de la fonction pour exécuter les tâches planifiées

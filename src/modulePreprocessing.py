@@ -176,11 +176,9 @@ def process_and_insert_data(cursor, file_path, connection):
         cursor.executemany(insert_file_query, data_to_insert_file)
 
         # Traitement des données spécifiques aux fichiers de dégradations.
-        #df['need_replacement'] = df['need_replacement'].replace({False: 0, True: 1}, inplace=True)
         df['id'] = file_name
         target_column_series = df.pop('id')
         df.insert(0, "id", target_column_series)
-        #df = moduleProcessing.create_column_id(df, prefix='degradations', original_column='measure_day', target_column='id')
         df = moduleProcessing.drop_duplicates(df, original_column='compo_concerned', inplace=True)
         df = moduleProcessing.rename_column(df, original_column='linked_aero', renamed_column='ref_aero')
         df = moduleProcessing.change_column_type(df, original_column='measure_day', new_type='datetime64[ns]')
