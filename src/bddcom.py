@@ -54,9 +54,9 @@ def schedule_tasks_test():
 def schedule_tasks():
     # Récupération et traitement des .csv
     # Téléchargement des fichiers logs_vols_AAAA-MM-JJ.csv
-    schedule.every(60).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(5).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'logs_vols_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers degradations_AAAA-MM-JJ.csv
-    schedule.every(10).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
+    schedule.every(5).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'degradations_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers aeronefs_AAAA-MM-JJ.csv
     schedule.every(60).seconds.do(file_download_batch, start_date = start_date, path = 'https://sc-e.fr/docs/', file_name = 'aeronefs_AAAA-MM-JJ.csv', storage_folder = 'data/incoming')
     # Téléchargement des fichiers composants_AAAA-MM-JJ.csv
